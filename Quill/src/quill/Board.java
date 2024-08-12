@@ -2,92 +2,235 @@ package quill;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
-import java.awt.image.*;
+import java.awt.event.*;                                                        //events such as click event //mouse event,mouse event etc...
+import javax.swing.filechooser.*;
 import java.io.*;
+                                                         
+public class Quill extends JFrame implements ActionListener{
+JTextArea area;                                                                 //globally defining the text area
+String text;    
+Quill(){
 
-public class Board extends JPanel {
-    private BufferedImage image; // Holds the image to be displayed
-    private int imageWidth = 800; // Default width of the image
-    private int imageHeight = 600; // Default height of the image
-    private boolean drawing = false; // Tracks whether the user is currently drawing
-    private Graphics2D g2d; // Graphics context for drawing on the image
-    private BufferedImage drawingLayer; // Layer for drawing on top of the image
+        setTitle("Quill");                                                      //title of the application
+        ImageIcon quillIcon=new ImageIcon(ClassLoader.getSystemResource("quill/npd_icon.jpeg"));
+        Image icon=quillIcon.getImage();                                        //icon of the application
+        setIconImage(icon);
+        
+        
+        JMenuBar menubar=new JMenuBar();                                        //making menubar
+        menubar.setBackground( Color.lightGray);                                //color of the menubar
 
-    // Constructor initializes the panel
-    public Board() {
-        // Set the preferred size of the panel
-        setPreferredSize(new Dimension(imageWidth, imageHeight));
-        // Make the background of the panel transparent
-        setOpaque(false);
+       
+        JMenu file= new JMenu("File");
+        file.setFont(new Font("AERIAL",Font.PLAIN,15));                         //style of menubar font
+      
+       
+        JMenuItem newfile = new JMenuItem("NEW");                               //drop down menu
+        newfile.addActionListener(this);
+        newfile.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N , ActionEvent.CTRL_MASK));
+        
+        
+        JMenuItem open = new JMenuItem("OPEN");    
+        open.addActionListener(this);
+        open.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O , ActionEvent.CTRL_MASK));
 
-        // Mouse listener for handling mouse press and release events
-        addMouseListener(new MouseAdapter() {
-            @Override
-            public void mousePressed(MouseEvent e) {
-                // Start drawing if an image is loaded
-                if (image != null) {
-                    drawing = true;
-                }
-            }
+        
+        JMenuItem save = new JMenuItem("SAVE");  
+        save.addActionListener(this);
+        save.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S , ActionEvent.CTRL_MASK));
 
-            @Override
-            public void mouseReleased(MouseEvent e) {
-                // Stop drawing when the mouse is released
-                drawing = false;
-            }
-        });
+        
+        JMenuItem print=new JMenuItem("PRINT");    
+         print.addActionListener(this);
+        print.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_P , ActionEvent.CTRL_MASK));
 
-        // Mouse motion listener for handling mouse dragging events
-        addMouseMotionListener(new MouseMotionAdapter() {
-            @Override
-            public void mouseDragged(MouseEvent e) {
-                // Draw on the drawing layer if drawing is active and an image is loaded
-                if (drawing && image != null) {
-                    if (drawingLayer != null) {
-                        // Set the drawing color (e.g., black) and draw a line at the current mouse position
-                        g2d.setColor(Color.BLACK); // You can change this to use the selected pen color
-                        g2d.drawLine(e.getPoint().x, e.getPoint().y, e.getPoint().x, e.getPoint().y);
-                        repaint(); // Request a repaint to show the drawing
-                    }
-                }
-            }
-        });
-    }
+        
+        JMenuItem exit = new JMenuItem("EXIT");
+        exit.addActionListener(this);
+        exit.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, ActionEvent.CTRL_MASK));
 
-    // Method to load an image from a file
-    public void setImage(File file) {
-        try {
-            // Read the image from the file
-            image = javax.imageio.ImageIO.read(file);
-            imageWidth = image.getWidth(); // Update the image width
-            imageHeight = image.getHeight(); // Update the image height
-            setPreferredSize(new Dimension(imageWidth, imageHeight)); // Set the preferred size of the panel
+            file.add(newfile);
+              file.add(open);
+                file.add(save);
+                  file.add(print);
+                    file.add(exit);
+      
+        menubar.add(file);
+      
+        JMenu edit= new JMenu("Edit");
+        edit.setFont(new Font("AERIAL",Font.PLAIN,15));                         //style of menubar font
+      
+        JMenuItem cut = new JMenuItem("Cut");                                   //drop down menu
+        cut.addActionListener(this);
+        cut.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_X , ActionEvent.CTRL_MASK));
+        
+        
+        JMenuItem copy = new JMenuItem("Copy");                      
+        copy.addActionListener(this);
+        copy.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C , ActionEvent.CTRL_MASK));
 
-            // Initialize the drawing layer
-            drawingLayer = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_INT_ARGB);
-            g2d = drawingLayer.createGraphics(); // Create a graphics context for the drawing layer
-            g2d.setComposite(AlphaComposite.SrcOver); // Set the compositing mode for drawing
-            g2d.setColor(Color.BLACK); // Set the default drawing color
-            g2d.setStroke(new BasicStroke(2)); // Set the thickness of the drawing stroke
+        
+        JMenuItem paste = new JMenuItem("Paste");                  
+        paste.addActionListener(this);
+        paste.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_V , ActionEvent.CTRL_MASK));
 
-            // Request a repaint to display the loaded image
-            repaint();
-        } catch (IOException e) {
-            e.printStackTrace(); // Print stack trace if an error occurs while reading the image
-        }
+        
+        JMenuItem select_all=new JMenuItem("Select All");            
+        select_all.addActionListener(this);
+        select_all.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_A , ActionEvent.CTRL_MASK));
+
+        edit.add(cut);
+        edit.add(copy);
+        edit.add(paste);
+        edit.add(select_all);
+        
+        menubar.add(edit);
+        
+        JMenu penMenu = new JMenu("Pen");                                       //pen function
+        penMenu.setFont(new Font("AERIAL", Font.PLAIN, 15));
+
+        JMenuItem choosePenColor = new JMenuItem("Choose Color");
+        choosePenColor.addActionListener(this);
+
+        penMenu.add(choosePenColor);
+        menubar.add(penMenu);
+       
+        
+        JMenu white_board= new JMenu("Board");
+        white_board.setFont(new Font("AERIAL",Font.PLAIN,15));
+        menubar.add(white_board);
+        
+        JMenuItem boardMenuItem = new JMenuItem("Board");
+        boardMenuItem.addActionListener(this); 
+        white_board.add(boardMenuItem);
+
+        setJMenuBar(menubar);
+       
+        
+        JMenu helpmenubar= new JMenu("Help");
+        helpmenubar.setFont(new Font("AERIAL",Font.PLAIN,15));                  //style of menubar font
+      
+        JMenuItem help = new JMenuItem("About");                                //drop down menu
+        help.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_H, ActionEvent.CTRL_MASK));
+        
+        helpmenubar.add(help);
+        
+        menubar.add(helpmenubar);
+        
+        
+        area = new JTextArea();                                                 //text area
+        
+        
+        area.setFont(new Font("COMIC SANS",Font.PLAIN,18));
+        area.setLineWrap(true);
+        area.setWrapStyleWord(true);
+        
+        
+        JScrollPane pane = new JScrollPane(area);                               //scroll bar
+        pane.setBorder(BorderFactory.createEmptyBorder());
+        add(pane);
+        setExtendedState(JFrame.MAXIMIZED_BOTH);                                //by default opens as fullscreen opens
+        
+        
+        setVisible(true);
     }
 
     @Override
-    protected void paintComponent(Graphics g) {
-        super.paintComponent(g); // Call the superclass method to ensure proper painting
-        if (image != null) {
-            // Draw the image on the panel
-            g.drawImage(image, 0, 0, imageWidth, imageHeight, this);
-            if (drawingLayer != null) {
-                // Draw the drawing layer on top of the image
-                g.drawImage(drawingLayer, 0, 0, this);
+    public void actionPerformed(ActionEvent ae){
+       if(ae.getActionCommand().equals("NEW")){
+            area.setText("");
+       }
+       else if(ae.getActionCommand().equals("OPEN")){
+           JFileChooser chooser =  new JFileChooser();                                                     // a swing class that enables choosing files
+           chooser.setAcceptAllFileFilterUsed(false);                                                      //adding ecxeption on file acceptance
+           FileNameExtensionFilter restrict = new FileNameExtensionFilter("Only.txt files","txt");         //accepting only .txt files
+           chooser.addChoosableFileFilter(restrict);
+           
+           int action = chooser.showOpenDialog(this);                                                      //dialog from which the user can choose files
+           
+           if(action != JFileChooser.APPROVE_OPTION){
+            return ;
             }
+
+           File file =chooser.getSelectedFile();
+           
+           try{
+           BufferedReader reader = new BufferedReader(new FileReader(file));                                  //reads text files
+           area.read(reader, null);
+           }
+           catch(Exception e){
+           e.printStackTrace();
+           }
+       } else if(ae.getActionCommand().equals("SAVE")){
+       JFileChooser saveas = new JFileChooser();
+       saveas.setApproveButtonText("SAVE");
+       
+       int action = saveas.showOpenDialog(this);                                                                //dialog from which the user can choose files
+           
+           if(action != JFileChooser.APPROVE_OPTION){
+            return ;
+            }
+           
+           File filename = new File(saveas.getSelectedFile() + ".txt");
+           BufferedWriter outfile = null;
+           
+           try{
+               outfile = new BufferedWriter( new FileWriter(filename));
+               area.write(outfile);
+           }
+           
+           catch(Exception e) {
+           e.printStackTrace();
+           }
+       }
+       else if(ae.getActionCommand().equals("PRINT")){
+       try {
+           area.print();
+       }catch(Exception e){
+       e.printStackTrace();
+       }
+       }
+       else if(ae.getActionCommand().equals("EXIT")){
+       System.exit(0);
+       }
+       
+       else if(ae.getActionCommand().equals("Copy")){
+       text = area.getSelectedText();
+       }
+       else if(ae.getActionCommand().equals("Cut")){
+       text = area.getSelectedText();
+      area.replaceRange("",area.getSelectionStart(),area.getSelectionEnd());
+       }
+       else if(ae.getActionCommand().equals("Paste")){
+       area.insert(text, area.getCaretPosition());
+       }
+      else if(ae.getActionCommand().equals("Select All")){
+       area.selectAll();
+       } 
+      
+       else if (ae.getActionCommand().equals("Choose Color")) {
+    Color selectedColor = JColorChooser.showDialog(this, "Choose Pen Color", Color.BLACK);                          // Open color chooser dialog
+    if (selectedColor != null) {
+        area.setForeground(selectedColor);                                                                          // Set the selected color as the text color of the JTextArea
+    }
+}
+      else if (ae.getActionCommand().equals("Board")) {
+    JFrame boardFrame = new JFrame("Whiteboard");
+    boardFrame.setBackground( Color.BLACK);
+    boardFrame.setDefaultCloseOperation(JFrame.ICONIFIED); // or JFrame.EXIT_ON_CLOSE if you want it to close the entire application
+    Board board = new Board();
+    boardFrame.add(board);
+    boardFrame.pack();
+    boardFrame.setVisible(true);
+}
+        else if(ae.getActionCommand().equals("About")){
+          new About().setVisible(true);
         }
+       
+    }
+    
+    public static void main(String[] args) {
+        new Quill();
+               
     }
 }
