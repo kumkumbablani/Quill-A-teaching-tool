@@ -69,10 +69,9 @@ public class Board extends JPanel {
     public void setPenColor(Color color) {
         penColor = color;
     }
-
-    public static void main(String[] args) {
-        
-        JFrame frame = new JFrame("Whiteboard");
+public static void hatit()
+{
+ JFrame frame = new JFrame("Whiteboard");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         Board board = new Board();
@@ -96,5 +95,5 @@ public class Board extends JPanel {
 
         frame.pack();
         frame.setVisible(true);
-    }
+}
 }
