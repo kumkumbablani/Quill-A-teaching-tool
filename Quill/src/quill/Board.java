@@ -3,27 +3,29 @@ package quill;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.image.*;
+import java.io.*;
 
 public class Board extends JPanel {
-    private Color penColor = Color.BLACK;
+    private BufferedImage image;
+    private int imageWidth = 800;
+    private int imageHeight = 600;
     private boolean drawing = false;
-    private int prevX, prevY;
+    private Graphics2D g2d;
+    private BufferedImage drawingLayer;
 
-     public Board() {
-        setPreferredSize(new Dimension(500, 500));
-        setBackground(Color.WHITE);
+    public Board() {
+        setPreferredSize(new Dimension(imageWidth, imageHeight));
+        setOpaque(false); // Make sure the panel background is transparent
 
         addMouseListener(new MouseAdapter() {
-            
             @Override
-            public void mousePressed(MouseEvent e)
-            {
-                drawing = true;
-                prevX = e.getX();
-                prevY = e.getY();
+            public void mousePressed(MouseEvent e) {
+                if (image != null) {
+                    drawing = true;
+                }
             }
-            
-            
+
             @Override
             public void mouseReleased(MouseEvent e) {
                 drawing = false;
@@ -31,70 +33,49 @@ public class Board extends JPanel {
         });
 
         addMouseMotionListener(new MouseMotionAdapter() {
-          @Override
+            @Override
             public void mouseDragged(MouseEvent e) {
-                if (drawing) {
-                    int x = e.getX();
-                    int y = e.getY();
-                    drawLine(prevX, prevY, x, y);
-                    prevX = x;
-                    prevY = y;
+                if (drawing && image != null) {
+                    // Draw on the drawing layer
+                    if (drawingLayer != null) {
+                        g2d.setColor(Color.BLACK); // Use pen color or another setting
+                        g2d.drawLine(e.getPoint().x, e.getPoint().y, e.getPoint().x, e.getPoint().y);
+                        repaint();
+                    }
                 }
             }
         });
-        
-        
     }
-    
-    
+
+    public void setImage(File file) {
+        try {
+            image = javax.imageio.ImageIO.read(file);
+            imageWidth = image.getWidth();
+            imageHeight = image.getHeight();
+            setPreferredSize(new Dimension(imageWidth, imageHeight));
+
+            // Initialize drawing layer
+            drawingLayer = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_INT_ARGB);
+            g2d = drawingLayer.createGraphics();
+            g2d.setComposite(AlphaComposite.SrcOver);
+            g2d.setColor(Color.BLACK);
+            g2d.setStroke(new BasicStroke(2)); // Pen thickness
+
+            // Draw the image
+            repaint();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-    }
-
-    private void drawLine(int x1, int y1, int x2, int y2) {
-        Graphics g = getGraphics();
-        g.setColor(penColor);
-        g.drawLine(x1, y1, x2, y2);
-        g.dispose();
-    }
-
-    public void clear() {
-        Graphics g = getGraphics();
-        g.setColor(getBackground());
-        g.fillRect(0, 0, getWidth(), getHeight());
-        g.dispose();
-    }
-
-    public void setPenColor(Color color) {
-        penColor = color;
-    }
-
-    public static void main(String[] args) {
-        
-        JFrame frame = new JFrame("Whiteboard");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-        Board board = new Board();
-        frame.add(board, BorderLayout.CENTER);
-
-        JPanel controlPanel = new JPanel();
-        JButton clearButton = new JButton("Clear");
-        clearButton.addActionListener(e -> board.clear());
-        controlPanel.add(clearButton);
-
-        JButton colorButton = new JButton("Choose Color");
-        colorButton.addActionListener(e -> {
-            Color selectedColor = JColorChooser.showDialog(frame, "Choose Pen Color", board.penColor);
-            if (selectedColor != null) {
-                board.setPenColor(selectedColor);
+        if (image != null) {
+            g.drawImage(image, 0, 0, imageWidth, imageHeight, this);
+            if (drawingLayer != null) {
+                g.drawImage(drawingLayer, 0, 0, this);
             }
-        });
-        controlPanel.add(colorButton);
-
-        frame.add(controlPanel, BorderLayout.SOUTH);
-
-        frame.pack();
-        frame.setVisible(true);
+        }
     }
 }
